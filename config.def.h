@@ -57,7 +57,6 @@ static const Layout layouts[] = {
 	{ "[M]",      monocle },
 	{ "[D]",      deck },
 	{ "HHH",      grid },
-	{ "[]=",      tile },
 	{ "><>",      NULL },
 };
 
