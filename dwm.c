@@ -831,53 +831,56 @@ dirtomon(int dir)
 void
 drawbar(Monitor *m)
 {
-  int x, w, tw = 0;
-  unsigned int i, occ = 0, urg = 0;
-  Client *c;
-
   if (!m->showbar)
     return;
 
   /* draw status first so it can be overdrawn by tags later */
+  int status_width = 0;
   {
-
     if (m == selmon) { /* status is only drawn on selected monitor */
       drw_setscheme(drw, scheme[SchemeNorm]);
-      tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-      drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
+      status_width = TEXTW(stext) - lrpad + 2; /* 2px right padding */
+      drw_text(drw, m->ww - status_width, 0, status_width, bh, 0, stext, 0);
     }
   }
 
-  for (c = m->clients; c; c = c->next) {
-    occ |= c->tags;
-    if (c->isurgent)
-      urg |= c->tags;
-  }
-  x = 0;
-  for (i = 0; i < LENGTH(tags); i++) {
-    /* Do not draw vacant tags */
-    if(!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
-      continue;
-
-    w = TEXTW(tags[i]);
-    drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
-    drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
-    x += w;
-  }
-  w = TEXTW(m->ltsymbol);
-  drw_setscheme(drw, scheme[SchemeNorm]);
-  x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
-
-  // Draw bartabgroups
-  drw_rect(drw, x, 0, m->ww - tw - x, bh, 1, 1);
-  if ((w = m->ww - tw - x) > bh) {
-    bartabcalculate(m, x, tw, -1, bartabdraw);
-    if (BARTAB_BOTTOMBORDER) {
-      drw_setscheme(drw, scheme[SchemeTabActive]);
-      drw_rect(drw, 0, bh - 1, m->ww, 1, 1, 0);
+  /* draw tags */
+  int x = 0;
+  {
+    unsigned int urg = 0;
+    unsigned int occ = 0;
+    for (Client *c = m->clients; c; c = c->next) {
+      occ |= c->tags;
+      if (c->isurgent) {
+        urg |= c->tags;
+      }
     }
+
+    for (int i = 0; i < LENGTH(tags); i++) {
+      /* Do not draw vacant tags */
+      if((occ & 1 << i || m->tagset[m->seltags] & 1 << i)) {
+        int tag_width = TEXTW(tags[i]);
+        drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
+        drw_text(drw, x, 0, tag_width, bh, lrpad / 2, tags[i], urg & 1 << i);
+        x += tag_width;
+      }
+    }
+    drw_setscheme(drw, scheme[SchemeNorm]);
+    x = drw_text(drw, x, 0, TEXTW(m->ltsymbol), bh, lrpad / 2, m->ltsymbol, 0);
   }
-  drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+
+  /* Draw bartabgroups */
+  {
+    drw_rect(drw, x, 0, m->ww - status_width - x, bh, 1, 1);
+    if ((m->ww - status_width - x) > bh) {
+      bartabcalculate(m, x, status_width, -1, bartabdraw);
+      if (BARTAB_BOTTOMBORDER) {
+        drw_setscheme(drw, scheme[SchemeTabActive]);
+        drw_rect(drw, 0, bh - 1, m->ww, 1, 1, 0);
+      }
+    }
+    drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+  }
 }
 
 void
