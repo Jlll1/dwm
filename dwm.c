@@ -100,6 +100,8 @@ struct Client {
   Client *snext;
   Monitor *mon;
   Window win;
+  int bartab_startx;
+  int bartab_endx;
 };
 
 typedef struct {
@@ -151,7 +153,6 @@ static void arrange(Monitor *m);
 static void arrangemon(Monitor *m);
 static void attach(Client *c);
 static void attachstack(Client *c);
-static void bartabclick(Monitor *m, Client *c, int passx, int x, int w, int unused);
 static void buttonpress(XEvent *e);
 static void checkotherwm(void);
 static void cleanup(void);
@@ -390,14 +391,6 @@ applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact)
 }
 
 void
-bartabclick(Monitor *m, Client *c, int passx, int x, int w, int unused) {
-  if (passx >= x && passx <= x + w) {
-    focus(c);
-    restack(selmon);
-  }
-}
-
-void
 arrange(Monitor *m)
 {
   if (m)
@@ -455,6 +448,7 @@ buttonpress(XEvent *e)
 
     for(c = m->clients; c; c=c->next)
       occ |= c->tags;
+
     do {
       /* Do not reserve space for vacant tags */
       if (!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
@@ -469,8 +463,13 @@ buttonpress(XEvent *e)
       click = ClkLtSymbol;
     else if (ev->x > selmon->ww - (int)TEXTW(stext))
       click = ClkStatusText;
-    else /* focus clicked tab item @TODO fix this */
-      drawbartab(selmon, x, TEXTW(stext) - lrpad + 2);
+    else /* bartabclick */
+      for (Client *c = m->clients; c; c = c->next) {
+        if (c->bartab_startx <= ev->x && ev->x <= c->bartab_endx) {
+          focus(c);
+          restack(selmon);
+        }
+      }
   } else if ((c = wintoclient(ev->window))) {
     focus(c);
     restack(selmon);
@@ -844,6 +843,9 @@ drawbartab(Monitor *m, int xoffset, int bartabwidth) {
     }
 
     { /* draw */
+      c->bartab_startx = x;
+      c->bartab_endx = x + tab_width;
+
       drw_setscheme(drw, scheme[m->sel == c ? SchemeSel : SchemeNorm]);
       drw_text(drw, x, 0, tab_width, bh, lrpad / 2 + (c->icon ? c->icw + ICONSPACING : 0), c->name, 0);
 
@@ -1203,6 +1205,8 @@ manage(Window w, XWindowAttributes *wa)
   c->w = c->oldw = wa->width;
   c->h = c->oldh = wa->height;
   c->oldbw = wa->border_width;
+  c->bartab_startx = 0;
+  c->bartab_endx = 0;
 
   updateicon(c);
   updatetitle(c);
