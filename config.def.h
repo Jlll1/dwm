@@ -20,8 +20,6 @@ static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
 	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
-	[SchemeTabActive]  = { col_gray2, col_gray3,  col_gray2 },
-	[SchemeTabInactive]  = { col_gray1, col_gray3,  col_gray1 }
 };
 
 /* tagging */
@@ -44,11 +42,7 @@ static const int resizehints = 1;    /* 1 means respect size hints in tiled resi
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 
 /* Bartabgroups properties */
-#define BARTAB_BORDERS 1       // 0 = off, 1 = on
-#define BARTAB_BOTTOMBORDER 1  // 0 = off, 1 = on
-#define BARTAB_TAGSINDICATOR 0 // 0 = off, 1 = on if >1 client/view tag, 2 = always on
-static void (*bartabmonfns[])(Monitor *) = { NULL /* , customlayoutfn */ };
-static void (*bartabfloatfns[])(Monitor *) = { NULL /* , customlayoutfn */ };
+static void (*bartabmonfns[])(Monitor *) = { monocle, grid };
 
 static const Layout layouts[] = {
 	/* symbol     arrange function */
@@ -97,7 +91,7 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_Tab,      			setlayout,      {.v = &layouts[2]} },
 	{ MODKEY,                       XK_r,      			setlayout,      {.v = &layouts[3]} },
 	/*{ MODKEY,                       XK_space,  			setlayout,      {0} },*/
-	/*{ MODKEY|ShiftMask,             XK_space,  			togglefloating, {0} },*/
+	{ MODKEY|ShiftMask,             XK_f,  			togglefloating, {0} },
 	{ MODKEY,                       XK_0,      			view,           {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      			tag,            {.ui = ~0 } },
 	{ MODKEY,                       XK_comma,  			focusmon,       {.i = -1 } },
