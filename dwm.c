@@ -785,14 +785,7 @@ drawbar(Monitor *m)
     x = drw_text(drw, x, 0, TEXTW(m->ltsymbol), bh, lrpad / 2, m->ltsymbol, 0);
   }
 
-  /* Draw bartabgroups */
-  {
-    drw_rect(drw, x, 0, m->ww - status_width - x, bh, 1, 1);
-    if ((m->ww - status_width - x) > bh) {
-      drawbartab(m, x, m->ww - status_width - x);
-    }
-    drw_map(drw, m->barwin, 0, 0, m->ww, bh);
-  }
+  drawbartab(m, x, m->ww - status_width - x);
 }
 
 void
@@ -806,6 +799,8 @@ drawbars(void)
 
 void
 drawbartab(Monitor *m, int xoffset, int bartabwidth) {
+  drw_rect(drw, xoffset, 0, bartabwidth, bh, 1, 1);
+
   int clients_count = 0;
   int in_master_count = 0;
   for (Client *c = m->clients; c; c = c->next) {
@@ -816,8 +811,8 @@ drawbartab(Monitor *m, int xoffset, int bartabwidth) {
   }
 
   int fulllayout = 0;
-  for (int i = 0; i < LENGTH(bartabmonfns); i++) {
-    if (m ->lt[m->sellt]->arrange == bartabmonfns[i]) {
+  for (int i = 0; i < LENGTH(bartab_fulllayoutfor); i++) {
+    if (m ->lt[m->sellt]->arrange == bartab_fulllayoutfor[i]) {
       fulllayout = 1; break;
     }
   }
@@ -866,6 +861,8 @@ drawbartab(Monitor *m, int xoffset, int bartabwidth) {
 
     i++;
   }
+
+  drw_map(drw, m->barwin, 0, 0, m->ww, bh);
 }
 
 void

@@ -41,8 +41,7 @@ static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 
-/* Bartabgroups properties */
-static void (*bartabmonfns[])(Monitor *) = { monocle, grid };
+static void (*bartab_fulllayoutfor[])(Monitor *) = { monocle, grid };
 
 static const Layout layouts[] = {
 	/* symbol     arrange function */
