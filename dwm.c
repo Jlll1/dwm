@@ -170,6 +170,8 @@ static Monitor *dirtomon(int dir);
 static void drawbar(Monitor *m);
 static void drawbars(void);
 static void drawbartab(Monitor *m, int xoffset, int bartabwidth);
+static void drawprimarybar(Monitor *m);
+static void drawsecondarybar(Monitor *m);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
 static void focus(Client *c);
@@ -220,6 +222,7 @@ static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
+static void togglesecondarybar(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
 static void freeicon(Client *c);
@@ -278,6 +281,7 @@ static Display *dpy;
 static Drw *drw;
 static Monitor *mons, *selmon;
 static Window root, wmcheckwin;
+static int showsecondarybar = 0;
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
@@ -747,45 +751,15 @@ dirtomon(int dir)
 void
 drawbar(Monitor *m)
 {
-  if (!m->showbar)
+  if (!m->showbar) {
     return;
-
-  /* draw status first so it can be overdrawn by tags later */
-  int status_width = 0;
-  {
-    if (m == selmon) { /* status is only drawn on selected monitor */
-      drw_setscheme(drw, scheme[SchemeNorm]);
-      status_width = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-      drw_text(drw, m->ww - status_width, 0, status_width, bh, 0, stext, 0);
-    }
   }
 
-  /* draw tags */
-  int x = 0;
-  {
-    unsigned int urg = 0;
-    unsigned int occ = 0;
-    for (Client *c = m->clients; c; c = c->next) {
-      occ |= c->tags;
-      if (c->isurgent) {
-        urg |= c->tags;
-      }
-    }
-
-    for (int i = 0; i < LENGTH(tags); i++) {
-      /* Do not draw vacant tags */
-      if((occ & 1 << i || m->tagset[m->seltags] & 1 << i)) {
-        int tag_width = TEXTW(tags[i]);
-        drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
-        drw_text(drw, x, 0, tag_width, bh, lrpad / 2, tags[i], urg & 1 << i);
-        x += tag_width;
-      }
-    }
-    drw_setscheme(drw, scheme[SchemeNorm]);
-    x = drw_text(drw, x, 0, TEXTW(m->ltsymbol), bh, lrpad / 2, m->ltsymbol, 0);
+  if (showsecondarybar && m == selmon) {
+    drawsecondarybar(m);
+  } else {
+    drawprimarybar(m);
   }
-
-  drawbartab(m, x, m->ww - status_width - x);
 }
 
 void
@@ -863,6 +837,104 @@ drawbartab(Monitor *m, int xoffset, int bartabwidth) {
   }
 
   drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+}
+
+void
+drawprimarybar(Monitor *m)
+{
+  /* draw status first so it can be overdrawn by tags later */
+  int status_width = 0;
+  {
+    if (m == selmon) { /* status is only drawn on selected monitor */
+      drw_setscheme(drw, scheme[SchemeNorm]);
+
+      /* draw status only up to delim(';') for primary bar */
+      int found = 0;
+      int i;
+      for (i = 0; stext[i] != '\0'; i++) {
+        if (stext[i] == ';') {
+          found = 1;
+          break;
+        }
+      }
+      char *status_text;
+      if (found) {
+        status_text = ecalloc(1, i);
+        strncpy(status_text, stext, i);
+      } else {
+        status_text = stext;
+      }
+      status_width = TEXTW(status_text) - lrpad + 2; /* 2px right padding */
+      drw_text(drw, m->ww - status_width, 0, status_width, bh, 0, status_text, 0);
+
+      if (found) {
+        free(status_text);
+      }
+    }
+  }
+
+  /* draw tags */
+  int x = 0;
+  {
+    unsigned int urg = 0;
+    unsigned int occ = 0;
+    for (Client *c = m->clients; c; c = c->next) {
+      occ |= c->tags;
+      if (c->isurgent) {
+        urg |= c->tags;
+      }
+    }
+
+    for (int i = 0; i < LENGTH(tags); i++) {
+      /* Do not draw vacant tags */
+      if((occ & 1 << i || m->tagset[m->seltags] & 1 << i)) {
+        int tag_width = TEXTW(tags[i]);
+        drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
+        drw_text(drw, x, 0, tag_width, bh, lrpad / 2, tags[i], urg & 1 << i);
+        x += tag_width;
+      }
+    }
+    drw_setscheme(drw, scheme[SchemeNorm]);
+    x = drw_text(drw, x, 0, TEXTW(m->ltsymbol), bh, lrpad / 2, m->ltsymbol, 0);
+  }
+
+  drawbartab(m, x, m->ww - status_width - x);
+}
+
+void
+drawsecondarybar(Monitor *m)
+{
+  drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
+  drw_setscheme(drw, scheme[SchemeNorm]);
+
+  char *status = strdup(stext);
+  char *rest;
+
+  /* skip primary bar status */
+  strtok_r(status, ";", &rest);
+
+  char *left_status = strtok_r(NULL, ";", &rest);
+  if (left_status != NULL) {
+    drw_text(drw, 2, 0, TEXTW(left_status) - lrpad, bh,
+             0, left_status, 0);
+
+    char *center_status = strtok_r(NULL, ";", &rest);
+    if (center_status != NULL) {
+      int center_width = TEXTW(center_status) - lrpad;
+      drw_text(drw, (m->ww / 2) - (center_width / 2), 0,
+               center_width, bh, 0, center_status, 0);
+
+      char *right_status = strtok_r(NULL, ";", &rest);
+      if (right_status != NULL) {
+        int right_width = TEXTW(right_status) - lrpad;
+        drw_text(drw, m->ww - right_width - 2, 0,
+                 right_width, bh, 0, right_status, 0);
+      }
+    }
+  }
+
+  drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+  free(status);
 }
 
 void
@@ -1864,6 +1936,17 @@ togglefloating(const Arg *arg)
     resize(selmon->sel, selmon->sel->x, selmon->sel->y,
       selmon->sel->w, selmon->sel->h, 0);
   arrange(selmon);
+}
+
+void
+togglesecondarybar(const Arg *arg)
+{
+  if (arg->i) {
+    showsecondarybar = arg->i;
+  } else {
+    showsecondarybar = !showsecondarybar;
+  }
+  drawbars();
 }
 
 void
