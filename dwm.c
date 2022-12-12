@@ -904,8 +904,8 @@ drawprimarybar(Monitor *m)
 void
 drawsecondarybar(Monitor *m)
 {
-  drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
   drw_setscheme(drw, scheme[SchemeNorm]);
+  drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
 
   char *status = strdup(stext);
   char *rest;
