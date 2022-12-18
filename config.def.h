@@ -71,6 +71,8 @@ static const char *brightness_down[] = { "brightness_down", NULL };
 static const char *volume_up[] = { "volume_up", NULL };
 static const char *volume_down[] = { "volume_down", NULL };
 static const char *volume_mute[] = { "volume_mute", NULL };
+static const char *mount[] = { "dmenu_mount", "mount" };
+static const char *unmount[] = { "dmenu_mount", "unmount" };
 
 static const Key keys[] = {
 
@@ -81,8 +83,6 @@ static const Key keys[] = {
   TAGKEYS(  XK_5,  4)
   TAGKEYS(  XK_6,  5)
   TAGKEYS(  XK_7,  6)
-  TAGKEYS(  XK_8,  7)
-  TAGKEYS(  XK_9,  8)
 
   /* modifier                     key                         function        argument */
   { MODKEY,                       XK_p,                       spawn,          {.v = dmenucmd } },
@@ -92,6 +92,9 @@ static const Key keys[] = {
   { MODKEY|ShiftMask,             XK_m,                       spawn,          {.v = volume_mute } },
   { MODKEY|ShiftMask,             XK_comma,                   spawn,          {.v = volume_down } },
   { MODKEY|ShiftMask,             XK_period,                  spawn,          {.v = volume_up } },
+  { MODKEY|ShiftMask,             XK_period,                  spawn,          {.v = volume_up } },
+  { MODKEY,                       XK_8,                       spawn,          {.v = unmount } },
+  { MODKEY,                       XK_9,                       spawn,          {.v = mount } },
   { MODKEY,                       XK_b,                       togglebar,      {0} },
   { MODKEY,                       XK_j,                       focusstack,     {.i = +1 } },
   { MODKEY,                       XK_k,                       focusstack,     {.i = -1 } },
