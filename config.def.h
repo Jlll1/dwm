@@ -9,13 +9,13 @@ static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
 #define ICONSIZE 14   /* icon size */
 #define ICONSPACING 5 /* space between icon and title */
-static const char *fonts[]          = { "monospace:size=11", "FontAwesome:size=14" };
-static const char dmenufont[]       = "monospace:size=11";
-static const char col_gray1[]       = "#222222";
-static const char col_gray2[]       = "#444444";
-static const char col_gray3[]       = "#bbbbbb";
-static const char col_gray4[]       = "#eeeeee";
-static const char col_cyan[]        = "#005577";
+static const char *fonts[]          = { "Fixedsys Excelsior:size=13", "FontAwesome:size=14" };
+static const char dmenufont[]       = "FixedsysExcelsior:size=13";
+static const char col_gray1[]       = "#d3d7cf";
+static const char col_gray2[]       = "#d3d7cf";
+static const char col_gray3[]       = "#000000";
+static const char col_gray4[]       = "#ffffff";
+static const char col_cyan[]        = "#0000aa";
 static const char *colors[][3]      = {
   /*               fg         bg         border   */
   [SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
