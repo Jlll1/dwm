@@ -865,7 +865,7 @@ drawprimarybar(Monitor *m)
         status_text = stext;
       }
       status_width = TEXTW(status_text) - lrpad + 2; /* 2px right padding */
-      drw_text(drw, m->ww - status_width, 0, status_width, bh, 0, status_text, 0);
+      drw_text(drw, 0, 0, status_width, bh, 0, status_text, 0);
 
       if (found) {
         free(status_text);
@@ -873,32 +873,32 @@ drawprimarybar(Monitor *m)
     }
   }
 
-  /* draw tags */
-  int x = 0;
-  {
-    unsigned int urg = 0;
-    unsigned int occ = 0;
-    for (Client *c = m->clients; c; c = c->next) {
-      occ |= c->tags;
-      if (c->isurgent) {
-        urg |= c->tags;
-      }
-    }
+  /* don't draw tags or layout */
+  /* int x = 0; */
+  /* { */
+  /*   unsigned int urg = 0; */
+  /*   unsigned int occ = 0; */
+  /*   for (Client *c = m->clients; c; c = c->next) { */
+  /*     occ |= c->tags; */
+  /*     if (c->isurgent) { */
+  /*       urg |= c->tags; */
+  /*     } */
+  /*   } */
 
-    for (int i = 0; i < LENGTH(tags); i++) {
-      /* Do not draw vacant tags */
-      if((occ & 1 << i || m->tagset[m->seltags] & 1 << i)) {
-        int tag_width = TEXTW(tags[i]);
-        drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
-        drw_text(drw, x, 0, tag_width, bh, lrpad / 2, tags[i], urg & 1 << i);
-        x += tag_width;
-      }
-    }
-    drw_setscheme(drw, scheme[SchemeNorm]);
-    x = drw_text(drw, x, 0, TEXTW(m->ltsymbol), bh, lrpad / 2, m->ltsymbol, 0);
-  }
+  /*   for (int i = 0; i < LENGTH(tags); i++) { */
+  /*     /1* Do not draw vacant tags *1/ */
+  /*     if((occ & 1 << i || m->tagset[m->seltags] & 1 << i)) { */
+  /*       int tag_width = TEXTW(tags[i]); */
+  /*       drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]); */
+  /*       drw_text(drw, x, 0, tag_width, bh, lrpad / 2, tags[i], urg & 1 << i); */
+  /*       x += tag_width; */
+  /*     } */
+  /*   } */
+  /*   drw_setscheme(drw, scheme[SchemeNorm]); */
+  /*   x = drw_text(drw, x, 0, TEXTW(m->ltsymbol), bh, lrpad / 2, m->ltsymbol, 0); */
+  /* } */
 
-  drawbartab(m, x, m->ww - status_width - x);
+  drawbartab(m, status_width, m->ww - status_width);
 }
 
 void
