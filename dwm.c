@@ -775,6 +775,8 @@ void
 drawbartab(Monitor *m, int xoffset, int bartabwidth) {
   drw_rect(drw, xoffset, 0, bartabwidth, bh, 1, 1);
 
+  int padding = 2; // TODO move to config
+  int tabh = bh - (padding * 2);
   int clients_count = 0;
   int in_master_count = 0;
   for (Client *c = m->clients; c; c = c->next) {
@@ -798,16 +800,16 @@ drawbartab(Monitor *m, int xoffset, int bartabwidth) {
     int tab_width = 0;
     int x = 0;
     if (clients_count <= m->nmaster || m->nmaster == 0 || fulllayout) {
-      tab_width = bartabwidth / clients_count;
-      x = xoffset + (tab_width * i);
+      tab_width = (bartabwidth / clients_count) - (padding * 2);
+      x = xoffset + ((bartabwidth / clients_count) * i) + padding;
     } else {
       int master_width = (m->ww * m->mfact) - xoffset;
       if (i < m->nmaster) {
-        tab_width = master_width / in_master_count;
-        x = xoffset + (tab_width * i);
+        tab_width = (master_width / in_master_count) - (padding * 2);
+        x = xoffset + ((master_width / in_master_count) * i) + padding;
       } else {
-        tab_width = (bartabwidth - master_width) / (clients_count - m->nmaster);
-        x = xoffset + master_width + (tab_width * (i - m->nmaster));
+        tab_width = ((bartabwidth - master_width) / (clients_count - m->nmaster)) - (padding * 2);
+        x = xoffset + master_width + ((tab_width + (padding * 2)) * (i - m->nmaster)) + padding;
       }
     }
 
@@ -816,21 +818,26 @@ drawbartab(Monitor *m, int xoffset, int bartabwidth) {
       c->bartab_endx = x + tab_width;
 
       drw_setscheme(drw, scheme[m->sel == c ? SchemeSel : SchemeNorm]);
-      drw_text(drw, x, 0, tab_width, bh, lrpad / 2 + (c->icon ? c->icw + ICONSPACING : 0), c->name, 0);
+      drw_text(drw, x, 0 + padding, tab_width, tabh, lrpad / 2 + (c->icon ? c->icw + ICONSPACING : 0), c->name, 0);
 
       if (c->icon) {
-        drw_pic(drw, x + lrpad / 2, (bh - c->ich) / 2, c->icw, c->ich, c->icon);
+        drw_pic(drw, x + lrpad / 2, ((tabh - c->ich) / 2) + padding + 1, c->icw, c->ich, c->icon);
       }
 
       /* floating indicator */
       if (c->isfloating) {
-        drw_rect(drw, x + 2, 2, 5, 5, 0, 0);
+        drw_rect(drw, x + 2, padding + 2, 5, 5, 0, 0);
       }
 
       // Borders between tabs
-      XSetForeground(drw->dpy, drw->gc, drw->scheme[ColBorder].pixel);
-      XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, 0, 1, bh);
-      XFillRectangle(drw->dpy, drw->drawable, drw->gc, x + tab_width, 0, 1, bh);
+      XSetForeground(drw->dpy, drw->gc, drw->scheme[ColBorderLow].pixel);
+      XDrawLine(drw->dpy, drw->drawable, drw->gc, x, tabh + padding, x + tab_width + 1, tabh + padding);
+      XDrawLine(drw->dpy, drw->drawable, drw->gc, x + tab_width, padding, x + tab_width, tabh + padding);
+
+      XSetForeground(drw->dpy, drw->gc, drw->scheme[ColBorderHigh].pixel);
+      XDrawLine(drw->dpy, drw->drawable, drw->gc, x, padding, x + tab_width + 1, padding);
+      XDrawLine(drw->dpy, drw->drawable, drw->gc, x, padding, x, tabh + padding + 1);
+      /* XDrawRectangle(drw->dpy, drw->drawable, drw->gc, x, 0, tab_width - 1, bh - 1); */
     }
 
     i++;
@@ -981,7 +988,7 @@ focus(Client *c)
     detachstack(c);
     attachstack(c);
     grabbuttons(c, 1);
-    XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorder].pixel);
+    XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorderHigh].pixel);
     setfocus(c);
   } else {
     XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
@@ -1297,7 +1304,7 @@ manage(Window w, XWindowAttributes *wa)
 
   wc.border_width = c->bw;
   XConfigureWindow(dpy, w, CWBorderWidth, &wc);
-  XSetWindowBorder(dpy, w, scheme[SchemeNorm][ColBorder].pixel);
+  XSetWindowBorder(dpy, w, scheme[SchemeNorm][ColBorderHigh].pixel);
   configure(c); /* propagates border_width, if size doesn't change */
   updatewindowtype(c);
   updatesizehints(c);
@@ -1792,7 +1799,7 @@ setup(void)
   if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
     die("no fonts could be loaded.");
   lrpad = drw->fonts->h;
-  bh = drw->fonts->h + 2;
+  bh = drw->fonts->h + 2 + 4; // TODO +4 -> padding -> move to config
   updategeom();
   /* init atoms */
   utf8string = XInternAtom(dpy, "UTF8_STRING", False);
@@ -1817,7 +1824,7 @@ setup(void)
   /* init appearance */
   scheme = ecalloc(LENGTH(colors), sizeof(Clr *));
   for (i = 0; i < LENGTH(colors); i++)
-    scheme[i] = drw_scm_create(drw, colors[i], 3);
+    scheme[i] = drw_scm_create(drw, colors[i], 4);
   /* init bars */
   updatebars();
   updatestatus();
@@ -2019,7 +2026,7 @@ unfocus(Client *c, int setfocus)
   if (!c)
     return;
   grabbuttons(c, 0);
-  XSetWindowBorder(dpy, c->win, scheme[SchemeNorm][ColBorder].pixel);
+  XSetWindowBorder(dpy, c->win, scheme[SchemeNorm][ColBorderHigh].pixel);
   if (setfocus) {
     XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
     XDeleteProperty(dpy, root, netatom[NetActiveWindow]);

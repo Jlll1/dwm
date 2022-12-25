@@ -9,17 +9,18 @@ static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
 #define ICONSIZE 14   /* icon size */
 #define ICONSPACING 5 /* space between icon and title */
-static const char *fonts[]          = { "Fixedsys Excelsior:size=13", "FontAwesome:size=14" };
-static const char dmenufont[]       = "FixedsysExcelsior:size=13";
-static const char col_gray1[]       = "#d3d7cf";
-static const char col_gray2[]       = "#d3d7cf";
+static const char *fonts[]          = { "Fixedsys Excelsior:size=11", "FontAwesome:size=14" };
+static const char dmenufont[]       = "FixedsysExcelsior:size=11";
+static const char col_gray1[]       = "#c0c7cf";
+static const char col_gray2[]       = "#ccd4dc";
 static const char col_gray3[]       = "#000000";
 static const char col_gray4[]       = "#ffffff";
+static const char col_gray5[]       = "#80888f";
 static const char col_cyan[]        = "#0000aa";
-static const char *colors[][3]      = {
-  /*               fg         bg         border   */
-  [SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
-  [SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
+static const char *colors[][4]      = {
+  /*               fg         bg         borderh,     borderl   */
+  [SchemeNorm] = { col_gray3, col_gray1, col_gray4,   col_gray5 },
+  [SchemeSel]  = { col_gray3, col_gray2,  col_gray5,   col_gray4 },
 };
 
 /* tagging */
